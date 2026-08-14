@@ -3,8 +3,7 @@
 为什么自己实现：
 1. 让 PoC 在任意装有 Python 的机器上「零安装」即可运行；
 2. 直观展示 KubeEdge EdgeHub<->CloudHub 之间那条 **长连接双向通道** 的
-   握手、帧封装（masking）、心跳（ping/pong）与断线重连机制——
-   这正是面试/申请中常被深挖的「云边通信机制」。
+   握手、帧封装（masking）、心跳（ping/pong）与断线重连机制。
 
 生产环境当然直接用 `websockets` / `uvicorn` 等库；这里手写为教学与可移植性。
 """

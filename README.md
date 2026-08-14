@@ -1,8 +1,8 @@
 # EdgeMind · 云边协同大模型推理与 LLM 自愈运维平台
 
-> 一个能**完整体现 Python 工程能力、Linux/Docker/Kubernetes、KubeEdge 云边协同、
-> vLLM 大模型推理、以及 LLM Agent 故障自愈**的创新项目。零第三方依赖即可运行，
-> 并配套完整的容器化 / K8s / KubeEdge 落地方案。
+> 一个云边协同的推理与自愈系统：边端在弱网或故障下仍能提供服务，
+> 大部分异常由诊断 Agent 自动定位并修复。核心用 Python 标准库实现，
+> 零第三方依赖即可运行，并附带 Docker / Kubernetes / KubeEdge 的部署清单。
 
 ---
 
@@ -192,34 +192,20 @@ edgemind/
 
 ---
 
-## 9. 五维能力对照（直接回应需求）
+## 9. 设计要点
 
-| 需求 | 在本项目中的体现 | 位置 |
-|---|---|---|
-| ① Python + 工程能力 | 全量 Python，类型注解/日志/配置/测试/模块化 | 全部 `src/`；`tests/` |
-| ② Linux/Docker/K8s | 多阶段镜像、Compose、Deployment/DaemonSet/Service/HPA、探针 | `deploy/` |
-| ③ KubeEdge 架构与云边通信 | 手写 EdgeHub/CloudHub 长连接 + 消息协议，对齐 KubeEdge 概念 | `ws.py` `cloudhub.py` `edgehub.py` `deploy/kubeedge/` |
-| ④ vLLM 推理服务 | OpenAI 兼容网关 + 云边协同推理路由 + 离线 mock 降级 | `vllm_gateway.py` `local_inference.py` |
-| ⑤ LLM Agent + 故障排查 | RCA 诊断 Agent + 规则兜底 + 修复剧本 + 排障知识库 | `diagnoser.py` `playbook.py` `troubleshoot.py` |
-
-详细证据见 [docs/competency-map.md](docs/competency-map.md)。
+1. **诊断 Agent 嵌入运维闭环**：异常由 Agent 给出可执行的修复动作并自动落地，动作走白名单，保证安全边界；
+2. **云边分层推理与弹性路由**：本地小模型保低时延/离线，云端大模型保能力，按需互备；
+3. **零依赖可运行**：核心用标准库实现，便于阅读、审计与在普通机器上跑通；Docker/K8s/KubeEdge 清单作为可选的部署方式；
+4. **排障经验工程化**：把「现象→取证→假设→处置」的方法论固化成知识库与确定性规则，即使 LLM 不可用也能自愈。
 
 ---
 
-## 10. 创新点
+## 10. 后续可能方向
 
-1. **把 LLM Agent 放在云边运维闭环里**：不是「告警给人」，而是「LLM 直接给出可执行的修复动作并自动落地」，且动作白名单化保证安全；
-2. **云边分层推理 + 弹性路由**：本地小模型保时延/离线，云端大模型保能力，按需互备；
-3. **零依赖可运行 + 生产可落地**：标准库实现便于教学与审计，Docker/K8s/KubeEdge 清单可直接上生产；
-4. **排障经验工程化**：把「现象→取证→假设→处置」的方法论固化成知识库与确定性规则，LLM 不可用也能自愈。
+这些是仓库目前没有实现、但顺着现有结构比较自然能接上的方向，仅供参考，不预设路线图：
 
----
-
-## 11. 与开源之夏（OSPP）/ KubeEdge 的关系
-
-本项目可作为 **KubeEdge / KubeEdge Sedna（边云协同 AI）** 方向的 OSPP 候选提案，
-也可作为个人作品集证明「云原生 + 边缘 + LLM」的复合工程能力。它对标的能力包括：
-KubeEdge 云边通信机制理解、边缘 AI 推理部署、以及运维智能化（AIOps）方向。
-
-后续路线：接入真实 vLLM 与多模态模型、增加 EdgeMesh 服务发现、把 RCA 提示词做成
-可微调的小模型、补充 Grafana/Prometheus 可观测看板。
+- 接入真实 vLLM 与多模态模型，替换内置 mock；
+- 增加 EdgeMesh 风格的服务发现；
+- 把 RCA 提示词沉淀为一个可微调的小模型；
+- 补充 Grafana / Prometheus 可观测看板。
