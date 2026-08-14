@@ -1,0 +1,56 @@
+# 本地一键拉起 EdgeMind PoC（云 + 2 边 + 诊断 Agent）。
+# 用法：docker compose up --build
+# 之后浏览器打开 http://localhost:8000 看实时看板。
+#
+# 接入真实 vLLM：取消 vllm 服务注释，并把 cloud 的 VLLM_BASE_URL 指向它。
+services:
+  cloud:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.cloud
+    ports:
+      - "8000:8000"   # HTTP 控制面 / 看板 / OpenAI 兼容接口
+      - "9000:9000"   # CloudHub WebSocket（边端长连接）
+    environment:
+      VLLM_BASE_URL: ""            # 留空走内置 mock；填 http://vllm:8000 接真实 vLLM
+      VLLM_MODEL: "mock-7b"
+    # depends_on:
+    #   - vllm
+
+  edge-1:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.edge
+    environment:
+      EDGE_NODE_ID: edge-1
+      EDGE_REGION: factory-a
+      EDGE_GPU: nvidia-t4
+      EDGE_CLOUD_WS_URL: ws://cloud:9000
+    depends_on:
+      - cloud
+
+  edge-2:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.edge
+    environment:
+      EDGE_NODE_ID: edge-2
+      EDGE_REGION: factory-b
+      EDGE_GPU: nvidia-t4
+      EDGE_CLOUD_WS_URL: ws://cloud:9000
+    depends_on:
+      - cloud
+
+  # 真实大模型推理服务（可选）：取消注释即可接入真实 vLLM
+  # vllm:
+  #   image: vllm/vllm-openai:latest
+  #   command: ["--model", "Qwen/Qwen2.5-7B-Instruct", "--dtype", "auto", "--port", "8000"]
+  #   ports:
+  #     - "8001:8000"
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]

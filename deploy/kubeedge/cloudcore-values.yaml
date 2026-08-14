@@ -1,0 +1,26 @@
+# KubeEdge cloudcore 部署参数（Helm values 摘录，供对照理解）。
+# 官方安装：helm install cloudcore kubeedge/cloudcore -n kubeedge
+# 本文件标注了与 EdgeMind 对应的概念映射。
+cloud:
+  # cloudhub：云端 WebSocket 网关，边端 EdgeHub 长连接入口 —— 对应 EdgeMind CloudHub
+  enable: true
+  cloudHub:
+    websocket:
+      enable: true
+      port: 9000            # 与 EdgeMind EDGEMIND_WS_PORT 一致
+    quark:
+      enable: false
+  # edgeController / deviceController：云端对边缘节点与设备的控制器 —— 对应 EdgeMind Controller
+  edgeController:
+    enable: true
+  deviceController:
+    enable: true
+
+# edgeStream / router：云边应用隧道与流量路由 —— 对应 EdgeMind 的推理请求云端下发
+edgeStream:
+  enable: true
+  port: 10004
+
+# 启用 EdgeMesh 做云边/边边服务发现（可选，对应「云边协同推理路由」）
+edgemesh:
+  enable: false

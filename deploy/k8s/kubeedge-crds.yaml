@@ -1,0 +1,49 @@
+# KubeEdge 原生 CRD 使用示例（说明 EdgeMind 如何与 KubeEdge 协同）。
+#
+# 下面的 CRD 由 KubeEdge 安装时自动提供（无需我们定义），这里展示
+# EdgeMind 会「消费」哪些 KubeEdge 资源：
+#   - EdgeNode（edges.kubeedge.io）：边缘节点状态、就绪情况
+#   - Device（devices.kubeedge.io）：边端设备孪生（如摄像头/传感器）
+#
+# EdgeMind 的控制面等价于 KubeEdge 的 cloudcore（含 cloudhub）；
+# EdgeAgent 等价于运行在 edgecore 上的业务负载。二者通过 KubeEdge 的
+# WebSocket 隧道通信，本 PoC 用自研 ws 模块做了同构复现。
+---
+# 示例：一个被 KubeEdge 纳管的边缘节点（由 KubeEdge 自动维护）
+apiVersion: edges.kubeedge.io/v1alpha1
+kind: EdgeNode
+metadata:
+  name: edge-1
+  labels:
+    region: factory-a
+    gpu: nvidia-t4
+status:
+  state: "up"          # up / down / unknown
+  reason: "keepalive"
+---
+# 示例：边端挂载的一台工业摄像头设备（设备孪生）
+apiVersion: devices.kubeedge.io/v1alpha2
+kind: Device
+metadata:
+  name: camera-line-01
+  namespace: edgemind
+  labels:
+    node: edge-1
+spec:
+  deviceModelRef:
+    name: camera-model
+  nodeName: edge-1
+  protocol:
+    bluetooth: {}
+status:
+  twins:
+    - propertyName: powerState
+      desired:
+        value: "ON"
+      reported:
+        value: "ON"
+    - propertyName: streamUp
+      desired:
+        value: "true"
+      reported:
+        value: "true"

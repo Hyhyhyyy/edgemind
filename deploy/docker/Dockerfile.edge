@@ -1,0 +1,15 @@
+# EdgeMind 边端镜像（纯 Python 标准库，可随 KubeEdge DaemonSet 调度到边缘节点）
+FROM python:3.12-slim
+
+ENV PYTHONPATH=/app/src \
+    PYTHONUNBUFFERED=1 \
+    EDGE_NODE_ID=edge-1 \
+    EDGE_REGION=factory-a \
+    EDGE_GPU=nvidia-t4 \
+    EDGE_CLOUD_WS_URL=ws://edgemind-cloud:9000
+
+WORKDIR /app
+COPY src/ /app/src/
+
+EXPOSE 8000
+CMD ["python", "-m", "edge.edge_agent"]

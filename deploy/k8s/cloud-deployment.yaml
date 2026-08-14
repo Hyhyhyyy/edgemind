@@ -1,0 +1,104 @@
+# 云端控制面：Deployment + Service（CloudHub / HTTP 控制面 / 诊断 Agent）
+# 真实推理由独立的 vLLM Deployment 承载，云端网关通过 VLLM_BASE_URL 转发。
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edgemind-cloud
+  namespace: edgemind
+  labels:
+    app: edgemind-cloud
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: edgemind-cloud
+  template:
+    metadata:
+      labels:
+        app: edgemind-cloud
+    spec:
+      containers:
+        - name: cloud
+          image: edgemind/cloud:latest
+          ports:
+            - containerPort: 8000   # HTTP 控制面 / 看板
+            - containerPort: 9000   # CloudHub WebSocket
+          envFrom:
+            - configMapRef:
+                name: edgemind-cloud-cm
+          readinessProbe:
+            httpGet:
+              path: /api/status
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/status
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edgemind-cloud
+  namespace: edgemind
+spec:
+  selector:
+    app: edgemind-cloud
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+    - name: cloudhub
+      port: 9000
+      targetPort: 9000
+  type: ClusterIP
+---
+# 云端 vLLM 推理服务（大模型层），独立于控制面，便于独立扩缩容
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edgemind-vllm
+  namespace: edgemind
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: edgemind-vllm
+  template:
+    metadata:
+      labels:
+        app: edgemind-vllm
+    spec:
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai:latest
+          args: ["--model", "Qwen/Qwen2.5-7B-Instruct", "--dtype", "auto", "--port", "8000"]
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              nvidia.com/gpu: 1
+            limits:
+              nvidia.com/gpu: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edgemind-vllm
+  namespace: edgemind
+spec:
+  selector:
+    app: edgemind-vllm
+  ports:
+    - port: 8000
+      targetPort: 8000

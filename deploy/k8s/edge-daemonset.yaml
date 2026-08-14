@@ -1,0 +1,51 @@
+# 边端 Agent：以 DaemonSet 形式调度到每个 KubeEdge 边缘节点。
+# KubeEdge 把边缘节点纳管为 K8s Node（带 edge-role 标签），本 DaemonSet
+# 用 nodeSelector 选中它们，每个边缘节点跑一个 EdgeAgent 实例，
+# 通过 EdgeHub 与云端 CloudHub 建立 WebSocket 长连接。
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: edgemind-edge
+  namespace: edgemind
+  labels:
+    app: edgemind-edge
+spec:
+  selector:
+    matchLabels:
+      app: edgemind-edge
+  template:
+    metadata:
+      labels:
+        app: edgemind-edge
+    spec:
+      # 只调度到 KubeEdge 纳管的边缘节点
+      nodeSelector:
+        node-role.kubernetes.io/edge: ""
+      tolerations:
+        - key: "node-role.kubernetes.io/edge"
+          operator: "Exists"
+          effect: "NoSchedule"
+      hostNetwork: true            # 边端常需直接访问本地设备/摄像头
+      containers:
+        - name: edge
+          image: edgemind/edge:latest
+          envFrom:
+            - configMapRef:
+                name: edgemind-edge-cm
+          # 用节点名作为边端唯一 ID（与 KubeEdge 的节点标识一致）
+          env:
+            - name: EDGE_NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          - name: EDGE_GPU
+            valueFrom:
+             fieldRef:
+                fieldPath: status.allocatable/nvidia.com/gpu
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"

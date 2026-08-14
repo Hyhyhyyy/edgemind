@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# 本地临时文件
+*.log
+.DS_Store
+.idea/
+.vscode/
+
+# 演示/运行产物
+demo_output/
+*.tmp

@@ -1,0 +1,13 @@
+# EdgeMind 云端镜像（纯 Python 标准库，无需编译）
+FROM python:3.12-slim
+
+ENV PYTHONPATH=/app/src \
+    PYTHONUNBUFFERED=1 \
+    EDGEMIND_HTTP_PORT=8000 \
+    EDGEMIND_WS_PORT=9000
+
+WORKDIR /app
+COPY src/ /app/src/
+
+EXPOSE 8000 9000
+CMD ["python", "-m", "cloud.serve"]
