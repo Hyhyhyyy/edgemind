@@ -1,3 +1,19 @@
+<p align="center">
+  <img src="banner.svg" alt="EdgeMind · 云边协同大模型推理与 LLM 自愈平台" width="100%">
+</p>
+
+<div align="center">
+
+![Python](https://img.shields.io/badge/Python-3.12-3776AB)
+![vLLM](https://img.shields.io/badge/vLLM-Inference-FF6600)
+![KubeEdge](https://img.shields.io/badge/KubeEdge-Deploy-326CE5)
+
+**☁️ 云边协同 · 大模型推理与 LLM 自愈运维平台**
+
+</div>
+
+---
+
 # EdgeMind · 云边协同大模型推理与 LLM 自愈运维平台
 
 > 一个云边协同的推理与自愈系统：边端在弱网或故障下仍能提供服务，
